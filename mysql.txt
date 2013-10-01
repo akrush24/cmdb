@@ -4,7 +4,7 @@ CREATE TABLE IF NOT EXISTS `cmdb_hosts` (
   `host` varchar(100) DEFAULT NULL,
   `dns` varchar(100) DEFAULT NULL,
   `ip` varchar(15) DEFAULT NULL,
-  PRIMARY KEY (`hostid`)
+  PRIMARY KEY (`host_id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8 AUTO_INCREMENT=1 ;
 
 CREATE TABLE IF NOT EXISTS `cmdb_fields` (
