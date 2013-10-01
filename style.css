@@ -1,0 +1,89 @@
+html{padding: 0px; margin: 0px;  font-size: 13px; background-color: #F4F4F4; color: #000; font-family: 'Times New Roman'; width:100%;}
+body{padding: 0px; margin: 0px; width:100%; }
+
+table, td, tr {
+vertical-align:top;
+padding:0px;
+margin:0px;
+border-width:0px;
+border-style:solid;
+border-spacing:0px;
+border-collapse:collapse;
+
+}
+#td {padding-left: 3px; padding-right: 3px; border-width:0px; margin:0px;}
+
+#grid, pre {
+  padding-left:2px;
+  padding-right:2px;
+  border-width:1px;
+  margin:0px;
+  font-family: 'Times New Roman';
+  border-color:#F2F2F2;
+}
+
+
+a:link    {color:#070719;  padding: 0px; text-decoration:none; margin:0px; }
+a:visited {color:#070719;  padding: 0px; text-decoration:none; margin:0px; }
+a:active  {color:#070719;  padding: 0px; text-decoration:none; margin:0px; }
+a:hover   {color:#00008B;  padding: 0px; text-decoration:none; margin:0px; }
+
+#grid:hover { BACKGROUND: #D8D8D8; }
+#blink:hover { BACKGROUND: #F2F2F2; }
+
+
+input,select,option,textarea,form {
+padding:0px;
+  margin:0px;
+  color:#000;
+  border-width:1px;
+  border-color:#E6E6E6;
+  border-style:solid;
+  padding-left:3px;
+  padding-right:3px;
+  font-family: 'Times New Roman';
+}
+
+form { border-style:none; }
+
+#head {background-color: #E8E8E8; text-align:center;font-weight:bold;padding-left:1px;padding-right:1px;border-collapse:collapse;border-color:#BDBDBD;border-width:1px; font-family:monospace;cursor:pointer;}
+
+#button {
+  border-style:solid;
+  border-color:#E6E6E6;
+  padding-left:3px;
+  padding-right:3px;
+  border-width:1px;
+  margin:1px;
+  font-family: 'Times New Roman';
+}
+
+#clear {padding: 0px; margin: 0px; color: #000; border-width:0px;}
+#menu {margin:0px; color: #fff; padding:0px; padding-left:5px; padding-right:5px; background-color:#2E2E2E; border-color:#A9A9A9; border-width: 1px; border-style: solid;}
+
+/* наша HTML таблица */
+table.sort{
+
+}
+
+/* ячейки таблицы */
+table.sort td{
+border:1px solid #CCCCCC;
+}
+
+/* заголовки таблицы */
+table.sort thead td{
+cursor:pointer;
+cursor:hand;
+font-weight:bold;
+text-align:center;
+vertical-align:middle
+}
+
+/* заголовок отсортированного столбца */
+table.sort thead td.curcol{
+  color:#210B61;
+}
+
+
+
