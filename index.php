@@ -309,7 +309,7 @@ echo "<tbody></table></div>";
 #### Help
 }elseif( isset($_GET['help']) ) {
 	print '<pre>';
-	include 'readme.txt';
+	include 'README.txt';
 	print '</pre>';
 }
 
