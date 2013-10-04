@@ -1,15 +1,13 @@
-<?php
+<?php 
+$dbname="cmdb"; //Ð˜Ð¼Ñ Ð±Ð°Ð·Ñ‹ Ð´Ð°Ð½Ð½Ñ‹Ñ…
+$mysql_username="cmdb"; //Ð˜Ð¼Ñ Ð¿Ð¾Ð»ÑŒÐ·Ð¾Ð²Ð°Ñ‚ÐµÐ»Ñ Ð±Ð°Ð·Ñ‹ Ð´Ð°Ð½Ð½Ñ‹Ñ…
+$mysql_password="unix11"; //ÐŸÐ°Ñ€Ð¾Ð»ÑŒ Ð¿Ð¾Ð»ÑŒÐ·Ð¾Ð²Ð°Ñ‚ÐµÐ»Ñ Ð±Ð°Ð·Ñ‹ Ð´Ð°Ð½Ð½Ñ‹Ñ…
+$mysql_host="localhost"; //Ð¡ÐµÑ€Ð²ÐµÑ€ Ð±Ð°Ð·Ñ‹ Ð´Ð°Ð½Ð½Ñ‹Ñ…
 
-$dbname="cmdb"; //Èìÿ áàçû äàííûõ
-$mysql_username="cmdb"; //Èìÿ ïîëüçîâàòåëÿ áàçû äàííûõ
-$mysql_password="unix11"; //Ïàðîëü ïîëüçîâàòåëÿ áàçû äàííûõ
-$mysql_host="localhost"; //Ñåðâåð áàçû äàííûõ
-
-//Ñîåäèíÿåìñÿ ñ áàçîé äàííûõ
+//Ð¡Ð¾ÐµÐ´Ð¸Ð½ÑÐµÐ¼ÑÑ Ñ Ð±Ð°Ð·Ð¾Ð¹ Ð´Ð°Ð½Ð½Ñ‹Ñ…
 $mysql_connect = mysql_connect($mysql_host, $mysql_username, $mysql_password);
 
-//Âûáèðàåì áàçó äàííûõ äëÿ ðàáîòû
+//Ð’Ñ‹Ð±Ð¸Ñ€Ð°ÐµÐ¼ Ð±Ð°Ð·Ñƒ Ð´Ð°Ð½Ð½Ñ‹Ñ… Ð´Ð»Ñ Ñ€Ð°Ð±Ð¾Ñ‚Ñ‹
 mysql_select_db($dbname);
-mysql_set_charset('utf8');
-
+mysql_set_charset('utf8'); 
 ?>
