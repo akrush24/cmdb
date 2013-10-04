@@ -24,7 +24,6 @@ if( !isset($_GET['edit']) and !isset($_GET['custom_fields']) and !isset($_GET['h
 
 // Вывод всех полей по выбранному инвентарю
   print '<div style="padding-left:15px;">';
-  
   print '<form action="index.php?edit='.$_GET['edit'].'&save" name="form_cmdb_fields" method="post" style="padding:0px; margin:0px;";>
   <table>';
   
@@ -32,6 +31,7 @@ if( !isset($_GET['edit']) and !isset($_GET['custom_fields']) and !isset($_GET['h
   while ($tablerows = mysql_fetch_row($sql))
     {
        print '<tr><td id="clear">NAME: <b></td><td></td><td><input size=80 style="font-weight: bold;" value="'.$tablerows[1].'" name="cmd_label"></b></td></tr>';
+	   $env_name = $tablerows[1];
     }
 
   $row = mysql_query('SELECT id,name,num FROM `cmdb_fields` WHERE type_id=1 ORDER BY  `cmdb_fields`.`sort` ASC',$mysql_connect);
@@ -87,7 +87,7 @@ if( !isset($_GET['edit']) and !isset($_GET['custom_fields']) and !isset($_GET['h
   print '</div>';
   print '
   <a href="javascript:document.form_cmdb_fields.submit()" id="menu" style="margin-left:3px;">Save</a>
-  <a href="" id="menu" style="margin-left:3px;">Delete</a>
+  <a href="" id="menu" style="margin-left:3px;" onClick="return window.confirm(\'Удалить элемент: '.$env_name.' \')">Delete</a>
   </form>';
 
 } elseif ( !isset($_GET['edit']) and isset($_GET['custom_fields'])  and !isset($_GET['hint']) and !isset($_GET['add_label']) ){
@@ -132,7 +132,10 @@ if( !isset($_GET['edit']) and !isset($_GET['custom_fields']) and !isset($_GET['h
 	// Удаляем поле
 	if(isset($_POST['delete']))
 	{
-      mysql_query('DELETE from cmdb_fields WHERE id='.$_GET['id'], $mysql_connect) or die(mysql_error());
+		# чистим все значения закрепленные за этим полем
+		mysql_query('DELETE from `cmdb_values` WHERE field_id='.$_GET['id'], $mysql_connect) or die(mysql_error());
+		# удаляем поле из таблички cmdb_fields
+		mysql_query('DELETE from cmdb_fields WHERE id='.$_GET['id'], $mysql_connect) or die(mysql_error());
 	}
 	
 // выводим список всех кастомных полей
@@ -140,6 +143,7 @@ if( !isset($_GET['edit']) and !isset($_GET['custom_fields']) and !isset($_GET['h
     print "<table><tr><td id='head'>Название</td><td id='head'>Sort</td id='head'><td id='head'>На главный экран</td><td id='head'>Нумирация</td><td></td></tr>";
     while ($row = mysql_fetch_row($res_cmdb_fields)){
       print '<form id="clear" name="edit_cmdb_fields'.$row[0].'" action="index.php?custom_fields&id='.$row[0].'&edited" method="post">';
+	  $field_name = $row[1];
       print '<tr><td style="text-align:center";><input name="name" style="font-weight: bold;" value="'.$row[1].'"></td>
 	  <td><input name="sort"  style="width:100%" value="'.$row[2].'"></td>';
 
@@ -161,7 +165,7 @@ if( !isset($_GET['edit']) and !isset($_GET['custom_fields']) and !isset($_GET['h
 
       print '<td>
 	  <a href="javascript:document.edit_cmdb_fields'.$row[0].'.submit()" id="menu" style="margin-left:3px;">Edit</a>
-	  <input type="submit" value="Delete" name="delete" id="menu">
+	  <input type="submit" value="Delete" name="delete" id="menu" onClick="return window.confirm(\'Удалить элемент: '.$field_name.'? Так же будут удалены все связанные данные с данным полем!\')">
 	  </td></tr>
 
 	  </form>';
@@ -184,8 +188,9 @@ if( !isset($_GET['edit']) and !isset($_GET['custom_fields']) and !isset($_GET['h
 
   #}
 
+
 #################################################################################
-##### Падстказки 
+##### Справочник 
 }elseif ( isset($_GET['hint']) and !isset($_GET['add_label']) ){
 // вставляем новое кастомное поле
   if( isset($_GET['add']) and isset($_GET['fieldid']) ){
@@ -232,6 +237,7 @@ if( !isset($_GET['edit']) and !isset($_GET['custom_fields']) and !isset($_GET['h
   }
   print '</table></div>'; 
 
+
 #################################################################################
 #### Функция добавления нового элемента
 }elseif( isset($_GET['add_label']) ) {
@@ -241,9 +247,10 @@ if( !isset($_GET['edit']) and !isset($_GET['custom_fields']) and !isset($_GET['h
 	</form>';
 	if( isset($_POST['add_cmdb_label']) and $_POST['add_cmdb_label'] != "" ){
 		//print 'INSERT INTO  `cmdb`.`cmdb_hosts` (`host`) VALUES ('.$_POST['add_cmdb_label'].');';
-		$res_cmdb_label = mysql_query('INSERT INTO  `cmdb`.`cmdb_hosts` (`host`) VALUES ("'.$_POST['add_cmdb_label'].'");', $mysql_connect) or die(mysql_error());
+		$res_cmdb_label = mysql_query('INSERT INTO `cmdb_hosts` (`host`) VALUES ("'.$_POST['add_cmdb_label'].'");', $mysql_connect) or die(mysql_error());
 		header("Location: index.php"); exit(); # после формы сохранения вохвращяемся на главную страницу
 	}
+
 
 #################################################################################
 #### Help
