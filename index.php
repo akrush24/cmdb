@@ -87,8 +87,10 @@ if( !isset($_GET['edit']) and !isset($_GET['custom_fields']) and !isset($_GET['h
   print '</div>';
   print '
   <a href="javascript:document.form_cmdb_fields.submit()" id="menu" style="margin-left:3px;">Save</a>
-  <a href="" id="menu" style="margin-left:3px;" onClick="return window.confirm(\'Удалить элемент: '.$env_name.' \')">Delete</a>
-  </form>';
+  <a href="javascript:document.form_cmdb_fields_del.submit()" id="menu" style="margin-left:3px;" onClick="return window.confirm(\'Удалить элемент: '.$env_name.'. Бутут удалены все связанные с ним данные !\')">Delete</a>
+  </form>
+  <form action="index.php?edit='.$_GET['edit'].'&inv_del" name="form_cmdb_fields_del" method="post" style="padding:0px; margin:0px;";><input name="env_del" type="hidden"></form>
+  ';
 
 } elseif ( !isset($_GET['edit']) and isset($_GET['custom_fields'])  and !isset($_GET['hint']) and !isset($_GET['add_label']) ){
 ####################################################################################
@@ -139,36 +141,38 @@ if( !isset($_GET['edit']) and !isset($_GET['custom_fields']) and !isset($_GET['h
 	}
 	
 // выводим список всех кастомных полей
+	
     $res_cmdb_fields = mysql_query('SELECT id,name,sort,front,num FROM `cmdb_fields` ORDER BY `sort` ASC',$mysql_connect);
     print "<table><tr><td id='head'>Название</td><td id='head'>Sort</td id='head'><td id='head'>На главный экран</td><td id='head'>Нумирация</td><td></td></tr>";
     while ($row = mysql_fetch_row($res_cmdb_fields)){
-      print '<form id="clear" name="edit_cmdb_fields'.$row[0].'" action="index.php?custom_fields&id='.$row[0].'&edited" method="post">';
-	  $field_name = $row[1];
-      print '<tr><td style="text-align:center";><input name="name" style="font-weight: bold;" value="'.$row[1].'"></td>
-	  <td><input name="sort"  style="width:100%" value="'.$row[2].'"></td>';
+	
+		print '<form id="clear" name="edit_cmdb_fields'.$row[0].'" action="index.php?custom_fields&id='.$row[0].'&edited" method="post">';
+		$field_name = $row[1];
+		print '<tr><td style="text-align:center";><input name="name" style="font-weight: bold;" value="'.$row[1].'"></td>
+		<td><input name="sort"  style="width:100%" value="'.$row[2].'"></td>';
 
-      $checked = '';
-      if($row[3] == '1'){
-        $checked='checked';
-      }else{
-        $checked='';
-      }
-      print '<td style="text-align:center"><input '.$checked.' name="front" type="checkbox" value="1"></td>';
-      
-      $checked = '';
-      if($row[4] == '1'){
-        $checked='checked';
-      }else{
-        $checked='';
-      }
-      print '<td style="text-align:center"><input '.$checked.' name="num" type="checkbox" value="1"></td>';
+		$checked = '';
+		if($row[3] == '1'){
+			$checked='checked';
+		}else{
+			$checked='';
+		}
+		print '<td style="text-align:center"><input '.$checked.' name="front" type="checkbox" value="1"></td>';
+		  
+		$checked = '';
+		if($row[4] == '1'){
+			$checked='checked';
+		}else{
+			$checked='';
+		}
+		print '<td style="text-align:center"><input '.$checked.' name="num" type="checkbox" value="1"></td>';
 
-      print '<td>
-	  <a href="javascript:document.edit_cmdb_fields'.$row[0].'.submit()" id="menu" style="margin-left:3px;">Edit</a>
-	  <input type="submit" value="Delete" name="delete" id="menu" onClick="return window.confirm(\'Удалить элемент: '.$field_name.'? Так же будут удалены все связанные данные с данным полем!\')">
-	  </td></tr>
-
-	  </form>';
+		print '<td>
+		<a href="javascript:document.edit_cmdb_fields'.$row[0].'.submit()" id="menu" style="margin-left:3px;">Edit</a>
+		<input type="submit" value="Delete" name="delete" id="menu" onClick="return window.confirm(\'Удалить элемент: '.$field_name.'? Так же будут удалены все связанные данные с данным полем!\')">
+		</td></tr>
+		</form>';
+	  
     }
     
     print '
