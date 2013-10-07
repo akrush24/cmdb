@@ -21,9 +21,13 @@ if( isset($_POST['cmdb_del_hint']) and !empty($_GET['hintid']) ){
 	mysql_query('DELETE FROM `cmdb_hint` WHERE `id`="'.$_GET['hintid'].'"',$mysql_connect) or die(mysql_error());
 }
   
- 
- 
- 
+
+if ( isset($_GET['backup']) ){
+	header("Location: backup.php"); exit();
+
+}
+
+
 #########################################################################################
 // Список инвентаря 
 if( !isset($_GET['edit']) and !isset($_GET['custom_fields']) and !isset($_GET['hint']) and !isset($_GET['add_label']) and !isset($_GET['help']) )
