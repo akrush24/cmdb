@@ -7,7 +7,23 @@ include 'db_con.php';
 # шапка сайта
 include 'header.php';
 
+############ Удаление инвентаря 
+if ( isset($_POST['env_del']) and isset($_GET['edit']) and $_GET['edit'] != '' ){
+	# удаляем все значение по этому объекту
+	mysql_query('DELETE from `cmdb_values` WHERE host_id='.$_GET['edit'], $mysql_connect) or die(mysql_error());
+	# удаляем сам объект
+	mysql_query('DELETE from `cmdb_hosts` WHERE host_id='.$_GET['edit'], $mysql_connect) or die(mysql_error());
+	header("Location: index.php"); exit(); # после формы сохранения вохвращяемся на главную страницу
+}
 
+####### Удаление выбранной подсказки
+if( isset($_POST['cmdb_del_hint']) and !empty($_GET['hintid']) ){
+	mysql_query('DELETE FROM `cmdb_hint` WHERE `id`="'.$_GET['hintid'].'"',$mysql_connect) or die(mysql_error());
+}
+  
+ 
+ 
+ 
 #########################################################################################
 // Список инвентаря 
 if( !isset($_GET['edit']) and !isset($_GET['custom_fields']) and !isset($_GET['hint']) and !isset($_GET['add_label']) and !isset($_GET['help']) )
@@ -89,8 +105,7 @@ if( !isset($_GET['edit']) and !isset($_GET['custom_fields']) and !isset($_GET['h
   <a href="javascript:document.form_cmdb_fields.submit()" id="menu" style="margin-left:3px;">Save</a>
   <a href="javascript:document.form_cmdb_fields_del.submit()" id="menu" style="margin-left:3px;" onClick="return window.confirm(\'Удалить элемент: '.$env_name.'. Бутут удалены все связанные с ним данные !\')">Delete</a>
   </form>
-  <form action="index.php?edit='.$_GET['edit'].'&inv_del" name="form_cmdb_fields_del" method="post" style="padding:0px; margin:0px;";><input name="env_del" type="hidden"></form>
-  ';
+  <form action="index.php?edit='.$_GET['edit'].'&inv_del" name="form_cmdb_fields_del" method="post" style="padding:0px; margin:0px;";><input name="env_del" type="hidden" value="1"></form>';
 
 } elseif ( !isset($_GET['edit']) and isset($_GET['custom_fields'])  and !isset($_GET['hint']) and !isset($_GET['add_label']) ){
 ####################################################################################
@@ -131,22 +146,25 @@ if( !isset($_GET['edit']) and !isset($_GET['custom_fields']) and !isset($_GET['h
       mysql_query('INSERT `cmdb_fields` (`name`, `front`, `sort`, `type_id`, `num`) VALUES("'.str_replace(' ','_',$_POST['name']).'", "'.$front.'", "'.$_POST['sort'].'", "1", "'.$num.'")', $mysql_connect) or die(mysql_error());
     }
 
-	// Удаляем поле
+	// Удаляем поле "Свойства объекта"
 	if(isset($_POST['delete']))
 	{
 		# чистим все значения закрепленные за этим полем
 		mysql_query('DELETE from `cmdb_values` WHERE field_id='.$_GET['id'], $mysql_connect) or die(mysql_error());
+		# чистим справочник по этому полю
+		mysql_query('DELETE from `cmdb_hint` WHERE field_id='.$_GET['id'], $mysql_connect) or die(mysql_error());
 		# удаляем поле из таблички cmdb_fields
 		mysql_query('DELETE from cmdb_fields WHERE id='.$_GET['id'], $mysql_connect) or die(mysql_error());
 	}
 	
-// выводим список всех кастомных полей
+// Окно редактирования Свойст объекта
 	
     $res_cmdb_fields = mysql_query('SELECT id,name,sort,front,num FROM `cmdb_fields` ORDER BY `sort` ASC',$mysql_connect);
     print "<table><tr><td id='head'>Название</td><td id='head'>Sort</td id='head'><td id='head'>На главный экран</td><td id='head'>Нумирация</td><td></td></tr>";
     while ($row = mysql_fetch_row($res_cmdb_fields)){
 	
-		print '<form id="clear" name="edit_cmdb_fields'.$row[0].'" action="index.php?custom_fields&id='.$row[0].'&edited" method="post">';
+		print '<form id="clear" name="edit_cmdb_fields'.$row[0].'" action="i
+		ndex.php?custom_fields&id='.$row[0].'&edited" method="post">';
 		$field_name = $row[1];
 		print '<tr><td style="text-align:center";><input name="name" style="font-weight: bold;" value="'.$row[1].'"></td>
 		<td><input name="sort"  style="width:100%" value="'.$row[2].'"></td>';
@@ -169,10 +187,9 @@ if( !isset($_GET['edit']) and !isset($_GET['custom_fields']) and !isset($_GET['h
 
 		print '<td>
 		<a href="javascript:document.edit_cmdb_fields'.$row[0].'.submit()" id="menu" style="margin-left:3px;">Edit</a>
-		<input type="submit" value="Delete" name="delete" id="menu" onClick="return window.confirm(\'Удалить элемент: '.$field_name.'? Так же будут удалены все связанные данные с данным полем!\')">
+		<input type="submit" value="Delete" name="delete" id="menu" onClick="return window.confirm(\'Удалить элемент: '.$field_name.'? Так же будут удалены все связанные данные!\')">
 		</td></tr>
 		</form>';
-	  
     }
     
     print '
@@ -211,6 +228,7 @@ if( !isset($_GET['edit']) and !isset($_GET['custom_fields']) and !isset($_GET['h
   if( isset($_GET['edit']) and isset($_GET['hintid']) and isset($_GET['sortdown']) ){
     mysql_query('UPDATE `cmdb_hint` SET `sort`=`sort`+1 WHERE `id`="'.$_GET['hintid'].'"',$mysql_connect) or die(mysql_error());
   }
+  
 // Выводим список подсказок по каждому кастомному полю
   print '<table style="margin-left:3px;width:99%;">';
   $res_cmdb_fields = mysql_query('SELECT id,name FROM `cmdb_fields` ORDER BY `sort` ASC',$mysql_connect);
@@ -229,11 +247,12 @@ if( !isset($_GET['edit']) and !isset($_GET['custom_fields']) and !isset($_GET['h
 <tr>
 <td><input name="value" value="'.$row2[1].'"></td>
 <td><input id="button" type="submit" value="edit"></td>
-<td><input id="button" type="submit" value="dell"></td>
+<td><a href="javascript:document.del_cmdb_hint_'.$row2[0].'.submit()" id="menu" onClick="return window.confirm(\'Удалить элемент: '.$field_name.'? Так же будут удалены все связанные данные!\')">del</a></td>
 <td><a id="button" href="index.php?hint&edit&hintid='.$row2[0].'&sortup">+</a></td>
 <td><a id="button" href="index.php?hint&edit&hintid='.$row2[0].'&sortdown">-</a></td>
 </tr>
 </form>';
+print '<form name="del_cmdb_hint_'.$row2[0].'" action="index.php?hint&edit&hintid='.$row2[0].'" method="post"><input type="hidden" name="cmdb_del_hint" value="1"></form>';
     }
     print '<form name="add_cmdb_hint" action="index.php?hint&add&fieldid='.$row[0].'" method="post"><tr><td><input name="value" value=""></td><td><input type="submit" value="add"></td><td></td></tr></form>';
     print '</table></td>';
