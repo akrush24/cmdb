@@ -85,5 +85,18 @@ table.sort thead td.curcol{
   color:#210B61;
 }
 
+table.bk
+{
+border-collapse:collapse;
+}
 
+#bk
+{
+border: 1px solid black;
+}
+
+#bk td
+{
+	padding-left: 2px;
+}
 

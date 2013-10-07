@@ -1,5 +1,5 @@
 <?php 
-$dbname="cmdbtest"; //Имя базы данных
+$dbname="cmdb"; //Имя базы данных
 $mysql_username="root"; //Имя пользователя базы данных
 $mysql_password="unix11"; //Пароль пользователя базы данных
 $mysql_host="localhost"; //Сервер базы данных
