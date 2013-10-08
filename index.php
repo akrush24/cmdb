@@ -41,9 +41,37 @@ if( !isset($_GET['edit']) and !isset($_GET['custom_fields']) and !isset($_GET['h
 
 } elseif (isset($_GET['edit']) and !isset($_GET['hint']) and !isset($_GET['add_label']) )
 {
-// Сохраняем кастомные поля
+	######### Сохранения свойств по объекту
 	if(isset($_GET['save'])){
-		include 'custom_fields_save.php';
+		$row = mysql_query('SELECT id,name FROM `cmdb_fields` WHERE type_id=1',$mysql_connect); // выбираем все поля по нужному инвентарю
+		while ($tablerows = mysql_fetch_row($row))
+		{
+			$cust_f_id = $tablerows[0];
+			$cust_f_name = $tablerows[1];
+			$index_num='num'.$cust_f_name;
+		  ;
+
+			$cmdb_values = mysql_real_escape_string($_POST[$cust_f_name]);
+
+		  if(mysql_fetch_row(mysql_query('select * from `cmdb_values` where `field_id`='.$cust_f_id.' and host_id='.$_GET['edit']))){
+			if ( !isset($_POST[$index_num]) ){
+			  mysql_query('UPDATE `cmdb_values` SET `count`="'.$cmdb_values.'" where `field_id`='.$cust_f_id.' and `host_id`='.$_GET['edit']) or die(mysql_error()); 
+			}else{
+			  mysql_query('UPDATE `cmdb_values` SET `count`="'.$cmdb_values.'", num="'.$_POST[$index_num].'" where `field_id`='.$cust_f_id.' and `host_id`='.$_GET['edit']) or die(mysql_error()); 
+			}
+		  }else{
+			if ( !isset($_POST[$index_num]) ){
+			  mysql_query('INSERT INTO `cmdb_values` (`field_id`, `host_id`, `count`) VALUES ("'.$cust_f_id.'", "'.$_GET['edit'].'", "'.$cmdb_values.'")') or die(mysql_error());
+			}else{
+			  mysql_query('INSERT INTO `cmdb_values` (`field_id`, `host_id`, `count`, `num`) VALUES ("'.$cust_f_id.'", "'.$_GET['edit'].'", "'.$cmdb_values.'", "'.$_POST[$index_num].'")') or die(mysql_error());
+			}
+		  }
+
+		}
+		if ( isset($_POST['cmd_label']) and $_POST['cmd_label'] != '' ){
+			mysql_query('UPDATE `cmdb_hosts` SET `host`="'.$_POST['cmd_label'].'" where `host_id`='.$_GET['edit']) or die(mysql_error()); 
+		}
+		 header("Location: index.php"); exit(); # после формы сохранения возвращяемся на главную страницу
 	};
 
 // Вывод всех полей по выбранному инвентарю
@@ -54,57 +82,66 @@ if( !isset($_GET['edit']) and !isset($_GET['custom_fields']) and !isset($_GET['h
   $sql = mysql_query('SELECT host_id, host FROM `cmdb_hosts` WHERE host_id='.$_GET['edit'] ,$mysql_connect);
   while ($tablerows = mysql_fetch_row($sql))
     {
-       print '<tr><td id="clear">NAME: <b></td><td></td><td><input size=80 style="font-weight: bold;" value="'.$tablerows[1].'" name="cmd_label"></b></td></tr>';
-	   $env_name = $tablerows[1];
+		$env_name = $tablerows[1];
+		print '<tr><td id="clear">NAME: <b></td><td></td><td><input size=80 style="font-weight: bold;" value="'.$env_name.'" name="cmd_label"></b></td></tr>';
+	   
     }
 
   $row = mysql_query('SELECT id,name,num FROM `cmdb_fields` WHERE type_id=1 ORDER BY  `cmdb_fields`.`sort` ASC',$mysql_connect);
   while ($tablerows = mysql_fetch_row($row))
   {
-    print '<tr style="border-color:#FAFAFA;border-width:1px 0 0 0;"><td>'.$tablerows[1].'</td><td id="clear" style="padding-left:10px;"></td>';
+	$cust_f_id = $tablerows[0];
+	$cust_f_name = $tablerows[1];
+	$cust_f_numtype = $tablerows[2];
+    print '<tr style="border-color:#FAFAFA;border-width:1px 0 0 0;"><td>'.$cust_f_name.'</td><td id="clear" style="padding-left:10px;"></td><td>';
 
-  $sql_cmdb_values = mysql_query('SELECT id,count,num FROM `cmdb_values` WHERE cmdb_values.host_id='.$_GET['edit'].' and field_id='.$tablerows[0],$mysql_connect);
-  $cmdb_values = mysql_fetch_array($sql_cmdb_values);
-  print '<td>';
-  $result = mysql_query('select value from `cmdb_hint` where `field_id`='.$tablerows[0].' ORDER BY  `cmdb_hint`.`id` ASC ');
+	
+  // перебираем все поля по выбранному "свойству"
+  $sql_cmdb_values = mysql_query('SELECT id,count,num FROM `cmdb_values` WHERE `cmdb_values`.`host_id`='.$_GET['edit'].' and field_id='.$cust_f_id,$mysql_connect);
+  while (  $cmdb_values = mysql_fetch_row($sql_cmdb_values) )
+   {
+	  
+	  $result = mysql_query('select value from `cmdb_hint` where `field_id`='.$cust_f_id.' ORDER BY  `cmdb_hint`.`id` ASC ');
+	  
+	  if(  mysql_fetch_assoc($result) ){ 
+	  # Если есть подсказки в cmdb_hint у данного поля (`field_id`='.$cust_f_id.') то создаем выпадающий список
+		$result = mysql_query('SELECT value FROM `cmdb_hint` WHERE `field_id`='.$cust_f_id.' ORDER BY sort');
+		@print '<select style="font-weight: bold;" name="'.$cust_f_name.'"><option style="font-weight: bold;" value="'.$cmdb_hint[0].'"></option>';
+		$hint_true=0;
+		while( $cmdb_hint = mysql_fetch_row($result ) ){
+		  if($cmdb_values[1] == $cmdb_hint[0]){
+			$selected='selected'; $hint_true=1;
+		  }else{
+			$selected='';
+		  }
+		  print '<option '.$selected.' style="font-weight: bold;"  value="'.$cmdb_hint[0].'">'.$cmdb_hint[0].'</option>';  
+		};
+		if( $hint_true==0 ){print '<option selected style="font-weight: bold;"  value="'.$cmdb_values[1].'">'.$cmdb_values[1].'</option>';  };
+		print '</select>';
+
+	  }else{
+		# Если подсказок нет выводим пустое поле ввода
+		print '<input size=80 style="font-weight: bold;" value="'.$cmdb_values[1].'" name="'.$cust_f_name.'">';
+	  }
+
+	  # количественное значение к полю (поле num в cmdb_fields != 0) 
+	  # то добавляем рядом с полем выпадающий список от 1 до 99
+	  if($cust_f_numtype != 0){
+		print ' x <select name="num'.$cust_f_name.'">';
+		for($i=1; $i <= 99; $i++){
+		  if( $cmdb_values[2] == $i ){
+			$selected = 'selected';
+		  }
+		  print '<option value="'.$i.'" '.$selected.'>'.$i.'</option>';
+		  $selected = '';
+		}
+		print '</select>';
+	  }
+	  
+	  // кнопка добавления аналогичного поля
+	  print '<a href="index.php?edit='.$_GET['edit'].'&add_under_properties">[+]</a></br>';
+   }
   
-  if(  mysql_fetch_assoc($result) ){ 
-  # Если есть подсказки в cmdb_hint у данного поля (`field_id`='.$tablerows[0].') то создаем выпадающий список
-    $result = mysql_query('select value from `cmdb_hint` where `field_id`='.$tablerows[0].' ORDER BY sort');
-    print '<select style="font-weight: bold;" name="'.$tablerows[1].'">';
-    print '<option style="font-weight: bold;" value="'.$cmdb_hint[0].'"></option>';
-    $hint_true=0;
-    while( $cmdb_hint = mysql_fetch_row($result ) ){
-      if($cmdb_values[1] == $cmdb_hint[0]){
-        $selected='selected'; $hint_true=1;
-      }else{
-        $selected='';
-      }
-      print '<option '.$selected.' style="font-weight: bold;"  value="'.$cmdb_hint[0].'">'.$cmdb_hint[0].'</option>';  
-    };
-    if( $hint_true==0 ){print '<option selected style="font-weight: bold;"  value="'.$cmdb_values[1].'">'.$cmdb_values[1].'</option>';  };
-    print '</select>';
-	print '<a href="index.php?field_id='.$_GET['field_id'].'&add_under_properties">+</a>';
-
-  }else{
-  # Если подсказок нет выводим пустое поле ввода
-    print '<input size=80 style="font-weight: bold;" value="'.$cmdb_values[1].'" name="'.$tablerows[1].'">';
-  }
-
-  # количественное значение к полю (поле num в cmdb_fields != 0) 
-  # то добавляем рядом с полем выпадающий список от 1 до 99
-  if($tablerows[2] != 0){
-    print ' x <select name="num'.$tablerows[1].'">';
-    for($i=1; $i <= 99; $i++){
-      if( $cmdb_values[2] == $i ){
-        $selected = 'selected';
-      }
-      print '<option value="'.$i.'" '.$selected.'>'.$i.'</option>';
-      $selected = '';
-    }
-    print '</select>';
-  }
-
   }
 
   print '</td></tr>';
@@ -165,8 +202,9 @@ if( !isset($_GET['edit']) and !isset($_GET['custom_fields']) and !isset($_GET['h
 		# удаляем поле из таблички cmdb_fields
 		mysql_query('DELETE from cmdb_fields WHERE id='.$_GET['id'], $mysql_connect) or die(mysql_error());
 	}
-	
-// Окно редактирования Свойст объекта
+
+###################################################	
+###### Окно редактирования Свойст объекта
 	
     $res_cmdb_fields = mysql_query('SELECT id,name,sort,front,num FROM `cmdb_fields` ORDER BY `sort` ASC',$mysql_connect);
     print "<table><tr><td id='head'>Название</td><td id='head'>Sort</td id='head'><td id='head'>На главный экран</td><td id='head'>Нумирация</td><td></td></tr>";

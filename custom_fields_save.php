@@ -25,6 +25,6 @@
 	if ( isset($_POST['cmd_label']) and $_POST['cmd_label'] != '' ){
 		mysql_query('UPDATE `cmdb_hosts` SET `host`="'.$_POST['cmd_label'].'" where `host_id`='.$_GET['edit']) or die(mysql_error()); 
 	}
-	 header("Location: index.php"); exit(); # после формы сохранения вохвращяемся на главную страницу
+	 header("Location: index.php"); exit(); # после формы сохранения возвращяемся на главную страницу
   
 ?>
