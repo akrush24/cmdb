@@ -21,10 +21,14 @@ if( isset($_POST['cmdb_del_hint']) and !empty($_GET['hintid']) ){
 	mysql_query('DELETE FROM `cmdb_hint` WHERE `id`="'.$_GET['hintid'].'"',$mysql_connect) or die(mysql_error());
 }
   
-
+####### Обработка бекапа
 if ( isset($_GET['backup']) ){
 	header("Location: backup.php"); exit();
 
+}
+####### Добавление свойства
+if ( isset($_GET['add_under_properties']) and isset($_GET['field_id']) ){
+	
 }
 
 
@@ -80,6 +84,7 @@ if( !isset($_GET['edit']) and !isset($_GET['custom_fields']) and !isset($_GET['h
     };
     if( $hint_true==0 ){print '<option selected style="font-weight: bold;"  value="'.$cmdb_values[1].'">'.$cmdb_values[1].'</option>';  };
     print '</select>';
+	print '<a href="index.php?field_id='.$_GET['field_id'].'&add_under_properties">+</a>';
 
   }else{
   # Если подсказок нет выводим пустое поле ввода
@@ -221,8 +226,11 @@ if( !isset($_GET['edit']) and !isset($_GET['custom_fields']) and !isset($_GET['h
   if( isset($_GET['add']) and isset($_GET['fieldid']) ){
     mysql_query('INSERT `cmdb_hint` (`field_id`, `value`) VALUES("'.$_GET['fieldid'].'", "'.$_POST['value'].'")',$mysql_connect) or die(mysql_error());
   }
-// изменяем существующее кастомное поле
+// изменяем отдельное поля справочника
   if( isset($_GET['edit']) and isset($_GET['hintid']) and isset($_POST['value']) ){
+	// в таблице cmdb_values
+	mysql_query('UPDATE `cmdb_values` SET `cmdb_values`.`count` =  "'.$_POST['value'].'" WHERE  `cmdb_values`.`count` = (select value from `cmdb_hint` WHERE `cmdb_hint`.`id`="'.$_GET['hintid'].'");',$mysql_connect) or die(mysql_error());
+	// в cmdb_hint
     mysql_query('UPDATE `cmdb_hint` SET `value`="'.$_POST['value'].'" WHERE `id`="'.$_GET['hintid'].'"',$mysql_connect) or die(mysql_error());
   }
 // изменение сортировки

@@ -2,10 +2,13 @@
 
 <head>
 <title>CMDB - Configuration management database</title>
-<link rel="stylesheet" type="text/css" href="style.css">
-<meta content="text/html; charset=utf-8" http-equiv="content-type"/>
+<style type="text/css">
+	body {background-color: #FFFFFF;padding: 0px; margin: 0px; width:100%;}
+	#bk{border: 1px solid black;border-collapse:collapse;}
+	#bk td{	padding-left: 2px;}
+</style>
 
-<script type="text/javascript" src="js/sort.js"></script>
+<meta content="text/html; charset=utf-8" http-equiv="content-type"/>
 
 </head>
 
