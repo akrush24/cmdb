@@ -30,12 +30,19 @@ while (@$tablerows = mysql_fetch_row($sql))
   while ($mysql_fetch_rowtablerows = mysql_fetch_row($sql_id_cmdb_values))
   {
     $sql_cmdb_values = mysql_query('SELECT cmdb_values.count,num FROM `cmdb_values` WHERE cmdb_values.field_id='.$mysql_fetch_rowtablerows[0].' and cmdb_values.host_id='.$tablerows[0],$mysql_connect);
-    $cmdb_values = mysql_fetch_array($sql_cmdb_values);
-    print '<td id=grid><a href="index.php?edit='.$tablerows[0].'" width="100%"><pre>';
-    if( $mysql_fetch_rowtablerows[2] != 0 and $cmdb_values[0] ){
-      print $cmdb_values[1].' <b color="blue">x</b> '; // Кол-во
-    }
-    print $cmdb_values[0].'</pre></a></td>';
+    echo '<td id=grid><a href="index.php?edit='.$tablerows[0].'" width="100%"><pre>';
+	
+	while ($cmdb_values = mysql_fetch_row($sql_cmdb_values))
+	{
+		echo "<table id=clear><tr><td id=clear>";
+		if( $mysql_fetch_rowtablerows[2] != 0 and $cmdb_values[0] ){
+			echo $cmdb_values[1]," <b color='blue'>x</b> "; // Кол-во
+		}
+		#$cmdb_values = str_replace($cmdb_values,"https://);<a href='https://",$cmdb_values[0],"' target='_blank'>
+		$cmdb_values[0] = $text=preg_replace('#((?:http|https):\/\/[^\s]+)#i','<a href="$1" / target="_blank" style="font-weight:bold;">$1</a>', $cmdb_values[0]);
+		echo $cmdb_values[0],"</td></tr></table>";
+	}
+	echo '</pre></a></td>';
   }
 
   echo("</tr>");

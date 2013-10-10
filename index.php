@@ -27,67 +27,93 @@ if ( isset($_GET['backup']) ){
 
 }
 ####### Добавление свойства
-if ( isset($_GET['add_under_properties']) and isset($_GET['field_id']) ){
-	
+if ( isset($_GET['add_under_properties']) and isset($_GET['cust_f_id']) ){
+	mysql_query('INSERT INTO `cmdb`.`cmdb_values` (`id` ,`field_id` ,`host_id` ,`count` ,`num`)VALUES(NULL,"'.$_GET['cust_f_id'].'","'.$_GET['edit'].'","","'.$_GET['cust_f_numtype'].'")',$mysql_connect) or die(mysql_error());
 }
 
 
 #########################################################################################
-// Список инвентаря 
+##### Список инвентаря, главная страница
 if( !isset($_GET['edit']) and !isset($_GET['custom_fields']) and !isset($_GET['hint']) and !isset($_GET['add_label']) and !isset($_GET['help']) )
 {
-
 	include 'show_all_inventory.php';
+}
 
-} elseif (isset($_GET['edit']) and !isset($_GET['hint']) and !isset($_GET['add_label']) )
+elseif ( (isset($_GET['edit']) and !isset($_GET['hint'])) or isset($_GET['add_label']) )
 {
+	if(isset($_GET['edit']))$INVID=$_GET['edit'];
+	
+	### Создаем новый инвентарь
+	if( isset($_GET['add_label']) and !isset($_GET['edit'])){
+		mysql_query('INSERT INTO `cmdb`.`cmdb_hosts` (`host_id`,`host`) VALUES ("","new")',$mysql_connect) or die(mysql_error());
+		$sql = mysql_query('SELECT `host_id` FROM  `cmdb_hosts` ORDER BY host_id DESC LIMIT 1',$mysql_connect) or die(mysql_error());
+		$INVID = mysql_fetch_row($sql)[0];
+	}
+	
 	######### Сохранения свойств по объекту
-	if(isset($_GET['save'])){
-		$row = mysql_query('SELECT id,name FROM `cmdb_fields` WHERE type_id=1',$mysql_connect); // выбираем все поля по нужному инвентарю
+	if(isset($_GET['save']) and isset($_GET['edit']) and $_GET['edit']!='' ){
+		
+		$row = mysql_query('SELECT * FROM `cmdb_values` WHERE host_id="'.$INVID.'"',$mysql_connect); // выбираем все поля по нужному инвентарю
 		while ($tablerows = mysql_fetch_row($row))
 		{
-			$cust_f_id = $tablerows[0];
-			$cust_f_name = $tablerows[1];
-			$index_num='num'.$cust_f_name;
-		  ;
-
-			$cmdb_values = mysql_real_escape_string($_POST[$cust_f_name]);
-
-		  if(mysql_fetch_row(mysql_query('select * from `cmdb_values` where `field_id`='.$cust_f_id.' and host_id='.$_GET['edit']))){
-			if ( !isset($_POST[$index_num]) ){
-			  mysql_query('UPDATE `cmdb_values` SET `count`="'.$cmdb_values.'" where `field_id`='.$cust_f_id.' and `host_id`='.$_GET['edit']) or die(mysql_error()); 
+			$value_id = $tablerows[0];
+			$cust_f_id = $tablerows[1];
+			$index_num='num'.$value_id;
+			
+			if(isset($_POST[$value_id])){	
+				$cmdb_values = mysql_real_escape_string($_POST[$value_id]);
 			}else{
-			  mysql_query('UPDATE `cmdb_values` SET `count`="'.$cmdb_values.'", num="'.$_POST[$index_num].'" where `field_id`='.$cust_f_id.' and `host_id`='.$_GET['edit']) or die(mysql_error()); 
+				$cmdb_values = '';
+			};
+			
+		$is_value = mysql_fetch_row(mysql_query('select count from `cmdb_values` where `id`='.$value_id));
+		#print '<b>'.$is_value[0].'</b><br>';
+		  if( mysql_fetch_row(mysql_query('select count from `cmdb_values` where `id`='.$value_id)) ){
+		  #print 'select id from `cmdb_values` where `id`='.$value_id.'<br>';
+		  // если значение существует, то делает update
+			if ( !isset($_POST[$index_num]) ){
+				#print 'UPDATE `cmdb_values` SET `count`="'.$cmdb_values.'" where `id`='.$value_id.'<br>';
+				mysql_query('UPDATE `cmdb_values` SET `count`="'.$cmdb_values.'" where `id`='.$value_id) or die(mysql_error()); 
+			}else{
+				#print 'UPDATE `cmdb_values` SET `count`="'.$cmdb_values.'", num="'.$_POST[$index_num].'" where `id`='.$value_id.'<br>';
+				mysql_query('UPDATE `cmdb_values` SET `count`="'.$cmdb_values.'", num="'.$_POST[$index_num].'" where `id`='.$value_id) or die(mysql_error());
 			}
+		  
 		  }else{
+		  // если значения не существует делаем Insert
+			if ( $cmdb_values != '' ){
 			if ( !isset($_POST[$index_num]) ){
-			  mysql_query('INSERT INTO `cmdb_values` (`field_id`, `host_id`, `count`) VALUES ("'.$cust_f_id.'", "'.$_GET['edit'].'", "'.$cmdb_values.'")') or die(mysql_error());
+				#print 'INSERT INTO `cmdb_values` (`field_id`, `host_id`, `count`) VALUES ("'.$cust_f_id.'","'.$_GET['edit'].'","'.$cmdb_values.'")<br>';
+				mysql_query('INSERT INTO `cmdb_values` (`field_id`, `host_id`, `count`) VALUES ("'.$cust_f_id.'","'.$INVID.'","'.$cmdb_values.'")') or die(mysql_error());
 			}else{
-			  mysql_query('INSERT INTO `cmdb_values` (`field_id`, `host_id`, `count`, `num`) VALUES ("'.$cust_f_id.'", "'.$_GET['edit'].'", "'.$cmdb_values.'", "'.$_POST[$index_num].'")') or die(mysql_error());
+				#print 'INSERT INTO `cmdb_values` (`field_id`, `host_id`, `count`, `num`) VALUES ("'.$cust_f_id.'", "'.$_GET['edit'].'", "'.$cmdb_values.'", "'.$_POST[$index_num].'")<br>';
+				mysql_query('INSERT INTO `cmdb_values` (`field_id`, `host_id`, `count`, `num`) VALUES ("'.$cust_f_id.'", "'.$INVID.'", "'.$cmdb_values.'", "'.$_POST[$index_num].'")') or die(mysql_error());
+			}
 			}
 		  }
 
 		}
 		if ( isset($_POST['cmd_label']) and $_POST['cmd_label'] != '' ){
-			mysql_query('UPDATE `cmdb_hosts` SET `host`="'.$_POST['cmd_label'].'" where `host_id`='.$_GET['edit']) or die(mysql_error()); 
+			mysql_query('UPDATE `cmdb_hosts` SET `host`="'.$_POST['cmd_label'].'" where `host_id`='.$INVID) or die(mysql_error()); 
 		}
-		 header("Location: index.php"); exit(); # после формы сохранения возвращяемся на главную страницу
+		header("Location: index.php"); exit(); # после формы сохранения возвращяемся на главную страницу
 	};
 
-// Вывод всех полей по выбранному инвентарю
+#################################################################
+######## Окно редактирования и добавления свойств объекта #######
+#################################################################
   print '<div style="padding-left:15px;">';
-  print '<form action="index.php?edit='.$_GET['edit'].'&save" name="form_cmdb_fields" method="post" style="padding:0px; margin:0px;";>
+  print '<form action="index.php?edit='.$INVID.'&save" name="form_cmdb_fields" method="post" style="padding:0px; margin:0px;";>
   <table>';
   
-  $sql = mysql_query('SELECT host_id, host FROM `cmdb_hosts` WHERE host_id='.$_GET['edit'] ,$mysql_connect);
+  $sql = mysql_query('SELECT host_id, host FROM `cmdb_hosts` WHERE host_id='.$INVID ,$mysql_connect);
   while ($tablerows = mysql_fetch_row($sql))
     {
 		$env_name = $tablerows[1];
 		print '<tr><td id="clear">NAME: <b></td><td></td><td><input size=80 style="font-weight: bold;" value="'.$env_name.'" name="cmd_label"></b></td></tr>';
-	   
     }
 
-  $row = mysql_query('SELECT id,name,num FROM `cmdb_fields` WHERE type_id=1 ORDER BY  `cmdb_fields`.`sort` ASC',$mysql_connect);
+  $row = mysql_query('SELECT id,name,num FROM `cmdb_fields` WHERE type_id=1 ORDER BY  `cmdb_fields`.`sort` ASC',$mysql_connect); // получаем все свойства объекта
   while ($tablerows = mysql_fetch_row($row))
   {
 	$cust_f_id = $tablerows[0];
@@ -95,18 +121,28 @@ if( !isset($_GET['edit']) and !isset($_GET['custom_fields']) and !isset($_GET['h
 	$cust_f_numtype = $tablerows[2];
     print '<tr style="border-color:#FAFAFA;border-width:1px 0 0 0;"><td>'.$cust_f_name.'</td><td id="clear" style="padding-left:10px;"></td><td>';
 
-	
+  
+  //если поля не существуем то создаем его с пустыми значениями
+  $sql_cmdb_values_test = mysql_query('SELECT id,count,num FROM `cmdb_values` WHERE `cmdb_values`.`host_id`='.$INVID.' and field_id='.$cust_f_id,$mysql_connect);
+  if( !mysql_fetch_row($sql_cmdb_values_test) ){
+	mysql_query('INSERT INTO `cmdb_values` (`field_id`, `host_id`, `count`, `num`) VALUES ("'.$cust_f_id.'", "'.$INVID.'", "", "'.$cust_f_numtype.'")') or die(mysql_error());
+  };
+  
+  $sql_cmdb_values = mysql_query('SELECT id,count,num FROM `cmdb_values` WHERE `cmdb_values`.`host_id`='.$INVID.' and field_id='.$cust_f_id,$mysql_connect);
+  #print 'SELECT id,count,num FROM `cmdb_values` WHERE `cmdb_values`.`host_id`='.$_GET['edit'].' and field_id='.$cust_f_id;
+  
   // перебираем все поля по выбранному "свойству"
-  $sql_cmdb_values = mysql_query('SELECT id,count,num FROM `cmdb_values` WHERE `cmdb_values`.`host_id`='.$_GET['edit'].' and field_id='.$cust_f_id,$mysql_connect);
-  while (  $cmdb_values = mysql_fetch_row($sql_cmdb_values) )
+  while ( ($cmdb_values = mysql_fetch_row($sql_cmdb_values)) )
    {
+		$ID=1;
+		$result = mysql_query('select value from `cmdb_hint` where `field_id`='.$cust_f_id.' ORDER BY  `cmdb_hint`.`id` ASC ');
 	  
-	  $result = mysql_query('select value from `cmdb_hint` where `field_id`='.$cust_f_id.' ORDER BY  `cmdb_hint`.`id` ASC ');
-	  
-	  if(  mysql_fetch_assoc($result) ){ 
-	  # Если есть подсказки в cmdb_hint у данного поля (`field_id`='.$cust_f_id.') то создаем выпадающий список
+	  if(  mysql_fetch_assoc($result) )
+	  { # Если есть подсказки в cmdb_hint у данного поля (`field_id`='.$cust_f_id.') то создаем выпадающий список
+
 		$result = mysql_query('SELECT value FROM `cmdb_hint` WHERE `field_id`='.$cust_f_id.' ORDER BY sort');
-		@print '<select style="font-weight: bold;" name="'.$cust_f_name.'"><option style="font-weight: bold;" value="'.$cmdb_hint[0].'"></option>';
+		print '<input name='.$cmdb_values[0].' value='.$cmdb_values[0].' type="hidden">'; // невидимое поле содержащее ValueID
+		print '<select style="font-weight: bold;" name="'.$cmdb_values[0].'"><option style="font-weight: bold;" value=""></option>';
 		$hint_true=0;
 		while( $cmdb_hint = mysql_fetch_row($result ) ){
 		  if($cmdb_values[1] == $cmdb_hint[0]){
@@ -119,15 +155,17 @@ if( !isset($_GET['edit']) and !isset($_GET['custom_fields']) and !isset($_GET['h
 		if( $hint_true==0 ){print '<option selected style="font-weight: bold;"  value="'.$cmdb_values[1].'">'.$cmdb_values[1].'</option>';  };
 		print '</select>';
 
-	  }else{
-		# Если подсказок нет выводим пустое поле ввода
-		print '<input size=80 style="font-weight: bold;" value="'.$cmdb_values[1].'" name="'.$cust_f_name.'">';
+	  }else{ # Если подсказок для поля нет, выводим пустое поле ввода
+	  
+		print '<input name='.$cmdb_values[0].' value='.$cmdb_values[0].' type="hidden">'; // невидимое поле содержащее ValueID
+		print '<input size=80 style="font-weight: bold;" value="'.$cmdb_values[1].'" name="'.$cmdb_values[0].'">';
+		
 	  }
 
 	  # количественное значение к полю (поле num в cmdb_fields != 0) 
-	  # то добавляем рядом с полем выпадающий список от 1 до 99
+	  # добавляем рядом с полем выпадающий список от 1 до 99
 	  if($cust_f_numtype != 0){
-		print ' x <select name="num'.$cust_f_name.'">';
+		print ' x <select name="num'.$cmdb_values[0].'">';
 		for($i=1; $i <= 99; $i++){
 		  if( $cmdb_values[2] == $i ){
 			$selected = 'selected';
@@ -139,7 +177,7 @@ if( !isset($_GET['edit']) and !isset($_GET['custom_fields']) and !isset($_GET['h
 	  }
 	  
 	  // кнопка добавления аналогичного поля
-	  print '<a href="index.php?edit='.$_GET['edit'].'&add_under_properties">[+]</a></br>';
+	  print '<a href="index.php?edit='.$INVID.'&cust_f_id='.$cust_f_id.'&cust_f_numtype='.$cust_f_numtype.'&add_under_properties">[+]</a></br>';
    }
   
   }
@@ -149,9 +187,10 @@ if( !isset($_GET['edit']) and !isset($_GET['custom_fields']) and !isset($_GET['h
   print '</div>';
   print '
   <a href="javascript:document.form_cmdb_fields.submit()" id="menu" style="margin-left:3px;">Save</a>
+  <a href="" id="menu" style="margin-left:3px;">Clone</a>
   <a href="javascript:document.form_cmdb_fields_del.submit()" id="menu" style="margin-left:3px;" onClick="return window.confirm(\'Удалить элемент: '.$env_name.'. Бутут удалены все связанные с ним данные !\')">Delete</a>
   </form>
-  <form action="index.php?edit='.$_GET['edit'].'&inv_del" name="form_cmdb_fields_del" method="post" style="padding:0px; margin:0px;";><input name="env_del" type="hidden" value="1"></form>';
+  <form action="index.php?edit='.$INVID.'&inv_del" name="form_cmdb_fields_del" method="post" style="padding:0px; margin:0px;";><input name="env_del" type="hidden" value="1"></form>';
 
 } elseif ( !isset($_GET['edit']) and isset($_GET['custom_fields'])  and !isset($_GET['hint']) and !isset($_GET['add_label']) ){
 ####################################################################################
@@ -297,7 +336,7 @@ if( !isset($_GET['edit']) and !isset($_GET['custom_fields']) and !isset($_GET['h
 <tr>
 <td><input name="value" value="'.$row2[1].'"></td>
 <td><input id="button" type="submit" value="edit"></td>
-<td><a href="javascript:document.del_cmdb_hint_'.$row2[0].'.submit()" id="menu" onClick="return window.confirm(\'Удалить элемент: '.$field_name.'? Так же будут удалены все связанные данные!\')">del</a></td>
+<td><a href="javascript:document.del_cmdb_hint_'.$row2[0].'.submit()" id="menu" onClick="return window.confirm(\'Удалить элемент: '.$row2[1].'? Так же будут удалены все связанные данные!\')">del</a></td>
 <td><a id="button" href="index.php?hint&edit&hintid='.$row2[0].'&sortup">+</a></td>
 <td><a id="button" href="index.php?hint&edit&hintid='.$row2[0].'&sortdown">-</a></td>
 </tr>
@@ -313,6 +352,7 @@ print '<form name="del_cmdb_hint_'.$row2[0].'" action="index.php?hint&edit&hinti
 
 #################################################################################
 #### Функция добавления нового элемента
+/*
 }elseif( isset($_GET['add_label']) ) {
 	print '<form name="add_label" action="index.php?add_label" method="post">
 	Name: <input name="add_cmdb_label" value="">
@@ -323,7 +363,7 @@ print '<form name="del_cmdb_hint_'.$row2[0].'" action="index.php?hint&edit&hinti
 		$res_cmdb_label = mysql_query('INSERT INTO `cmdb_hosts` (`host`) VALUES ("'.$_POST['add_cmdb_label'].'");', $mysql_connect) or die(mysql_error());
 		header("Location: index.php"); exit(); # после формы сохранения вохвращяемся на главную страницу
 	}
-
+*/
 
 #################################################################################
 #### Help
